@@ -19,7 +19,7 @@ This repository contains a collection of Python scripts that provide various com
    
 2. Navigate into the directory:
    ```bash
-   cd your-repo-name
+   cd HandyCLI
    ```
 
 3. Ensure you have Python installed (Python 3.x is recommended).
