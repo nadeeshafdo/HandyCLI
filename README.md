@@ -14,7 +14,7 @@ This repository contains a collection of Python scripts that provide various com
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/your-repo-name.git
+   git clone https://github.com/nadeeshafdo/HandyCLI.git
    ```
    
 2. Navigate into the directory:
