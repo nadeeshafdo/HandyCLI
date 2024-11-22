@@ -1,6 +1,6 @@
-# Custom Command Directory
+# HandyCLI
 
-This repository contains a collection of Python scripts that provide various command-line functionalities, mimicking Unix-like commands and adding new utilities for convenience. Each script serves a specific purpose and can be used individually.
+HandyCLI is a simple Python-based command-line utility that allows you to execute custom Python scripts from a specific directory using just their names and arguments, making it easier to manage and run your favorite scripts from the command line.
 
 ## Table of Contents
 
@@ -16,7 +16,7 @@ This repository contains a collection of Python scripts that provide various com
    ```bash
    git clone https://github.com/nadeeshafdo/HandyCLI.git
    ```
-   
+
 2. Navigate into the directory:
    ```bash
    cd HandyCLI
@@ -32,17 +32,50 @@ This repository contains a collection of Python scripts that provide various com
 
 ## Usage
 
-Each script can be run from the command line. To see how to use a specific script, you can run it without arguments, and it will display the usage instructions. For example:
+HandyCLI allows you to execute Python scripts located in the `commands` directory using their names as commands.
+
+### Running a Command
+
+To run a command, use the following syntax:
 
 ```bash
-python touch.py <filename>
+python $.py <command> [arguments...]
 ```
 
-Replace `<filename>` with the name of the file you want to create or update.
+For example, if you have a script called `proxy.py` in the `commands` directory, you can run it like this:
+
+```bash
+python $.py proxy
+```
+
+To pass arguments to the script, just include them after the command:
+
+```bash
+python $.py proxy import
+```
+
+### What Happens:
+
+- **No Arguments:** If no arguments are passed, the command will default to executing the script with the `show` argument (or any default argument specified).
+- **Invalid Command:** If the specified command doesn't exist in the `commands` directory, it will print an error message:
+  ```
+  '<command>' is not recognized as an internal or external command, 
+  operable program or batch file.~HandyCLI
+  ```
+
+### Example
+
+If you want to use the `proxy.py` script:
+
+```bash
+python $.py proxy import
+```
+
+If `proxy.py` exists and expects arguments, it will run with `import` as an argument. If no arguments are passed, it defaults to `show` (if specified).
 
 ## Scripts Overview
 
-Here’s a brief overview of the available scripts:
+HandyCLI supports a collection of Python scripts located in the `commands` directory. Here's an overview of the available scripts:
 
 - **cat.py**: Display the content of files.
 - **edit-path.py**: Modify the system's PATH variable.
@@ -83,3 +116,4 @@ pip install psutil requests beautifulsoup4 pillow
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+```
