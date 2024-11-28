@@ -10,7 +10,7 @@ COMMAND_DIRS = [
     os.path.join(BASE_DIR, "commands", "system"),
 ]
 
-REPO_URL = "https://github.com/nadeeshafdo/HandyCLI"
+REPO_URL = "https://github.com/nadeeshafdo/HandyCLI.git"
 LOCAL_REPO_DIR = BASE_DIR
 
 
@@ -31,6 +31,20 @@ def update_directory_from_repo():
 
     try:
         if not os.path.exists(os.path.join(LOCAL_REPO_DIR, ".git")):
+            print("Directory exists but is not a Git repository.")
+            print("Cleaning up the directory for a fresh clone...")
+
+            # Check if the directory is empty
+            if os.listdir(LOCAL_REPO_DIR):
+                # Option 1: Back up the directory
+                backup_dir = f"{LOCAL_REPO_DIR}_backup"
+                os.rename(LOCAL_REPO_DIR, backup_dir)
+                print(f"Existing files moved to: {backup_dir}")
+
+                # Option 2: Remove the directory (uncomment to enable)
+                # shutil.rmtree(LOCAL_REPO_DIR)
+                # print("Existing directory removed.")
+
             print("Cloning the HandyCLI repository...")
             subprocess.run(["git", "clone", REPO_URL, LOCAL_REPO_DIR], check=True)
             print("HandyCLI repository cloned successfully.")
