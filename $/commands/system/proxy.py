@@ -1,118 +1,132 @@
+import re
 import subprocess
 import sys
 
-
-def run_command(command):
+# Utility function to execute a command
+def exec(cmd):
     try:
-        result = subprocess.run(command, capture_output=True, text=True, check=True)
+        result = subprocess.run(cmd, capture_output=True, text=True, check=True)
         return result.stdout.strip()
     except subprocess.CalledProcessError as e:
         return f"Error: {e}"
 
-
-def get_winhttp_proxy():
-    command = ["netsh", "winhttp", "show", "proxy"]
-    output = run_command(command)
+# Show command related functions
+def getSysProxies():
+    """Retrieve system proxy settings."""
+    print("[System Proxy Settings]")
+    output = exec(["netsh", "winhttp", "show", "proxy"])
+    print(output)
     return output
 
+def getGitProxies():
+    """Retrieve Git proxy settings."""
+    print("[Git Proxy Settings]")
+    http_proxy = exec(["git", "config", "--global", "http.proxy"])
+    https_proxy = exec(["git", "config", "--global", "https.proxy"])
+    socks_proxy = exec(["git", "config", "--global", "socks.proxy"])
+    print(f"http.proxy: {http_proxy}")
+    print(f"https.proxy: {https_proxy}")
+    print(f"socks.proxy: {socks_proxy}")
+    return {"http.proxy": http_proxy, "https.proxy": https_proxy, "socks.proxy": socks_proxy}
 
-def import_ie_proxy():
-    command = ["netsh", "winhttp", "import", "proxy", "source=ie"]
-    output = run_command(command)
+def getAllProxies():
+    """Retrieve both system and Git proxy settings."""
+    getSysProxies()
+    getGitProxies()
+
+# Import command related functions
+def setSysProxies():
+    """Import system proxy settings from Internet Explorer."""
+    print("[Importing System Proxy Settings]")
+    output = exec(["netsh", "winhttp", "import", "proxy", "source=ie"])
+    print(output)
     return output
 
+def setGitProxies():
+    """Set Git proxy settings based on system proxy."""
+    print("[Importing Git Proxy Settings]")
+    sys_proxy = exec(["netsh", "winhttp", "show", "proxy"])
+    match = re.search(r"Proxy Server\(s\)\s*:\s*(.*)", sys_proxy)
+    if match:
+        proxies = match.group(1).strip().split(";")
+        for proxy in proxies:
+            if proxy.startswith("http="):
+                exec(["git", "config", "--global", "http.proxy", proxy.split("=")[1]])
+            elif proxy.startswith("https="):
+                exec(["git", "config", "--global", "https.proxy", proxy.split("=")[1]])
+            elif proxy.startswith("socks="):
+                exec(["git", "config", "--global", "socks.proxy", proxy.split("=")[1]])
+        print("Git proxies imported successfully.")
+    else:
+        print("No system proxy found to import for Git.")
 
-def reset_winhttp_proxy():
-    command = ["netsh", "winhttp", "reset", "proxy"]
-    output = run_command(command)
+def setAllProxies():
+    """Set both system and Git proxy settings."""
+    setSysProxies()
+    setGitProxies()
+
+# Reset command related functions
+def unsetSysProxies():
+    """Reset system proxy settings."""
+    print("[Resetting System Proxy Settings]")
+    output = exec(["netsh", "winhttp", "reset", "proxy"])
+    print(output)
     return output
 
+def unsetGitProxies():
+    """Reset Git proxy settings."""
+    print("[Resetting Git Proxy Settings]")
+    exec(["git", "config", "--global", "--unset", "http.proxy"])
+    exec(["git", "config", "--global", "--unset", "https.proxy"])
+    exec(["git", "config", "--global", "--unset", "socks.proxy"])
+    print("Git proxies reset successfully.")
 
-def set_git_proxy(http_proxy=None, https_proxy=None, socks_proxy=None):
-    if http_proxy:
-        run_command(["git", "config", "--global", "http.proxy", http_proxy])
-    if https_proxy:
-        run_command(["git", "config", "--global", "https.proxy", https_proxy])
-    if socks_proxy:
-        run_command(["git", "config", "--global", "socks.proxy", socks_proxy])
+def unsetAllProxies():
+    """Reset both system and Git proxy settings."""
+    unsetSysProxies()
+    unsetGitProxies()
 
-
-def get_git_proxy():
-    http_proxy = run_command(["git", "config", "--global", "http.proxy"])
-    https_proxy = run_command(["git", "config", "--global", "https.proxy"])
-    socks_proxy = run_command(["git", "config", "--global", "socks.proxy"])
-    return {
-        "http": http_proxy if http_proxy else "Not Set",
-        "https": https_proxy if https_proxy else "Not Set",
-        "socks": socks_proxy if socks_proxy else "Not Set",
-    }
-
-
-def reset_git_proxy():
-    run_command(["git", "config", "--global", "--unset", "http.proxy"])
-    run_command(["git", "config", "--global", "--unset", "https.proxy"])
-    run_command(["git", "config", "--global", "--unset", "socks.proxy"])
-    return "Git proxy settings reset."
-
-
+# Main body of the program
 def main():
-    if len(sys.argv) < 2:
-        print("Usage: proxy.py [show|reset|import|set] [sys|git] [proxy URLs]")
+    if len(sys.argv) < 3:
+        print("Usage: proxy [show|import|reset] sys|git|all")
         sys.exit(1)
 
     command = sys.argv[1].lower()
-    scope = sys.argv[2].lower() if len(sys.argv) > 2 else None
+    scope = sys.argv[2].lower()
 
     if command == "show":
         if scope == "sys":
-            print("[System Proxy Settings]")
-            print(get_winhttp_proxy())
+            getSysProxies()
         elif scope == "git":
-            print("[Git Proxy Settings]")
-            proxies = get_git_proxy()
-            print(f"  HTTP Proxy: {proxies['http']}")
-            print(f"  HTTPS Proxy: {proxies['https']}")
-            print(f"  SOCKS Proxy: {proxies['socks']}")
+            getGitProxies()
+        elif scope == "all":
+            getAllProxies()
         else:
-            print("[System Proxy Settings]")
-            print(get_winhttp_proxy())
-            print("\n[Git Proxy Settings]")
-            proxies = get_git_proxy()
-            print(f"  HTTP Proxy: {proxies['http']}")
-            print(f"  HTTPS Proxy: {proxies['https']}")
-            print(f"  SOCKS Proxy: {proxies['socks']}")
+            print("Invalid scope. Usage: proxy show sys|git|all")
 
     elif command == "import":
         if scope == "sys":
-            print(import_ie_proxy())
+            setSysProxies()
         elif scope == "git":
-            print("Import functionality not supported for Git proxy.")
+            setGitProxies()
+        elif scope == "all":
+            setAllProxies()
         else:
-            print(import_ie_proxy())
+            print("Invalid scope. Usage: proxy import sys|git|all")
 
     elif command == "reset":
         if scope == "sys":
-            print(reset_winhttp_proxy())
+            unsetSysProxies()
         elif scope == "git":
-            print(reset_git_proxy())
+            unsetGitProxies()
+        elif scope == "all":
+            unsetAllProxies()
         else:
-            print(reset_winhttp_proxy())
-            print(reset_git_proxy())
-
-    elif command == "set":
-        if scope == "git":
-            http_proxy = sys.argv[3] if len(sys.argv) > 3 else None
-            https_proxy = sys.argv[4] if len(sys.argv) > 4 else None
-            socks_proxy = sys.argv[5] if len(sys.argv) > 5 else None
-            set_git_proxy(http_proxy, https_proxy, socks_proxy)
-            print("Git proxy settings updated.")
-        else:
-            print("Setting system proxy is not supported through this script.")
+            print("Invalid scope. Usage: proxy reset sys|git|all")
 
     else:
-        print("Invalid command. Usage: proxy.py [show|reset|import|set] [sys|git] [proxy URLs]")
-        sys.exit(1)
-
+        print("Invalid command. Usage: proxy [show|import|reset] sys|git|all")
 
 if __name__ == "__main__":
     main()
